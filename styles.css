@@ -1,0 +1,60 @@
+.loop-table {
+    margin-bottom: 30px;
+}
+body {
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    background-color: gray;
+}
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+table {
+    width: 100%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: right;
+}
+th:nth-child(1), td:nth-child(1),
+th:nth-child(2), td:nth-child(2),
+th:nth-child(3), td:nth-child(3),
+th:nth-child(4), td:nth-child(4) {
+    width: 5%;
+}
+th:nth-child(5), td:nth-child(5),
+th:nth-child(6), td:nth-child(6),
+th:nth-child(7), td:nth-child(7),
+th:nth-child(8), td:nth-child(8),
+th:nth-child(9), td:nth-child(9),
+th:nth-child(10), td:nth-child(10) {
+    width: 10%;
+}
+
+#numLoops ,#numPipes{
+    width: 200px;
+    padding: 10px;
+    margin-bottom:10px ;
+    border: solid, 1px;
+    border-radius: 5px;
+    background-color: rgb(205, 205, 205);
+}
+
+button{
+    width: 250px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    background-color: rgb(33, 116, 116);
+}
+
+button:hover{
+    background-color: rgb(0, 128, 128);
+    cursor: pointer;
+}
+
