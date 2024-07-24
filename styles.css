@@ -1,60 +1,157 @@
-.loop-table {
-    margin-bottom: 30px;
-}
 body {
     text-align: center;
     font-family: 'Roboto', sans-serif;
-    background-color: gray;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
 }
+
 .container {
-    width: 80%;
-    margin: 0 auto;
-}
-table {
-    width: 100%;
+    width: 90%;
+    max-width: 1200px;
     margin: 20px auto;
-    border-collapse: collapse;
-}
-th, td {
-    border: 1px solid black;
-    padding: 8px;
-    text-align: right;
-}
-th:nth-child(1), td:nth-child(1),
-th:nth-child(2), td:nth-child(2),
-th:nth-child(3), td:nth-child(3),
-th:nth-child(4), td:nth-child(4) {
-    width: 5%;
-}
-th:nth-child(5), td:nth-child(5),
-th:nth-child(6), td:nth-child(6),
-th:nth-child(7), td:nth-child(7),
-th:nth-child(8), td:nth-child(8),
-th:nth-child(9), td:nth-child(9),
-th:nth-child(10), td:nth-child(10) {
-    width: 10%;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-#numLoops ,#numPipes{
-    width: 200px;
-    padding: 10px;
-    margin-bottom:10px ;
-    border: solid, 1px;
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+#numLoops, #numPipes {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: rgb(205, 205, 205);
+    background-color: #fafafa;
 }
 
-button{
-    width: 250px;
-    padding: 10px;
+button {
+    width: 100%;
+    max-width: 250px;
+    padding: 12px;
+    margin: 10px 0;
     border: none;
     border-radius: 5px;
     font-weight: bold;
-    background-color: rgb(33, 116, 116);
-}
-
-button:hover{
-    background-color: rgb(0, 128, 128);
+    background-color: #3295cf;
+    color: #fff;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
+button:hover {
+    background-color: #546bc0;
+    color: black;
+}
+
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: right;
+}
+
+th {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+td {
+    background-color: #fff;
+}
+
+th, td:nth-child(1),
+th, td:nth-child(2),
+th, td:nth-child(3),
+th, td:nth-child(4) {
+    width: 8%;
+}
+
+th, td:nth-child(5),
+th, td:nth-child(6),
+th, td:nth-child(7),
+th, td:nth-child(8),
+th, td:nth-child(9),
+th, td:nth-child(10) {
+    width: 12%;
+}
+
+.sum-row {
+    background-color: #f1f1f1;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 15px;
+    }
+
+    #numLoops, #numPipes, button {
+        width: 80%;
+        max-width: none;
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+}
+.footer {
+    color: #000000;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+    height: 50px;
+    bottom: 0;
+    
+  }
+  
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+  }
+  
+  .footer-content p {
+    margin: 5px 0;
+    margin-top: 20px;
+    padding-bottom: 10px;
+  }
+  
+  .footer-content svg{
+    width: 25px;
+    margin-bottom: 5px;
+    align-items: center;
+    
+  }
+  
+  .footer-content svg:hover {
+    cursor: pointer;
+    
+  }
+
+  .social a{
+    text-decoration: none;
+    padding: 30px;
+  }

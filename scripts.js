@@ -11,11 +11,19 @@ function generateTables() {
     for (let loop = 1; loop <= numLoops; loop++) {
         const loopTable = document.createElement('div');
         loopTable.classList.add('loop-table');
+        let sharedColumnHeader = '';
+
+        // Add the "Shared" column header if more than 1 loop
+        if (numLoops > 1) {
+            sharedColumnHeader = '<th class="shared-col">Shared</th>';
+        }
+
         loopTable.innerHTML = `
             <h2>Loop ${loop}</h2>
             <table id="loop${loop}Table">
                 <thead>
                     <tr>
+                        ${sharedColumnHeader}
                         <th class="pipe-col">Pipe</th>
                         <th class="small-col">Diameter (m)</th>
                         <th class="small-col">Length (m)</th>
@@ -31,7 +39,7 @@ function generateTables() {
                 <tbody>
                     ${generateTableRows(numPipes, loop)}
                     <tr>
-                        <td colspan="6" class="sum-row"></td>
+                        <td colspan="${numLoops > 1 ? 7 : 6}" class="sum-row"></td>
                         <td id="sumHf${loop}">Σhf = </td>
                         <td id="sumHfQ${loop}">Σhf/Q = </td>
                         <td></td>
@@ -49,8 +57,14 @@ function generateTables() {
 function generateTableRows(numPipes, loop) {
     let rows = '';
     for (let i = 1; i <= numPipes; i++) {
+        let checkboxColumn = '';
+        if (numLoops > 1) {
+            checkboxColumn = `<td><input type="checkbox" id="sharedPipe${loop}_${i}" onclick="syncCheckbox(${loop}, ${i})"></td>`;
+        }
+
         rows += `
             <tr>
+                ${checkboxColumn}
                 <td><input type="number" value="${i}" disabled></td>
                 <td><input type="number" step="0.01" id="diameter${loop}_${i}" oninput="updateValues(${loop}, ${i})" required></td>
                 <td><input type="number" step="0.1" id="length${loop}_${i}" oninput="updateValues(${loop}, ${i})" required></td>
@@ -65,6 +79,21 @@ function generateTableRows(numPipes, loop) {
         `;
     }
     return rows;
+}
+
+function syncCheckbox(loop, pipeIndex) {
+    const checkbox = document.getElementById(`sharedPipe${loop}_${pipeIndex}`);
+    const isChecked = checkbox.checked;
+
+    // Sync with other loops
+    for (let l = 1; l <= numLoops; l++) {
+        if (l !== loop) {
+            const otherCheckbox = document.getElementById(`sharedPipe${l}_${pipeIndex}`);
+            if (otherCheckbox) {
+                otherCheckbox.checked = isChecked;
+            }
+        }
+    }
 }
 
 function updateValues(loop, index) {
@@ -85,39 +114,82 @@ function updateValues(loop, index) {
 }
 
 function calculateCorrections(loop) {
+    let otherLoop;
+    if (loop === 1) {
+        otherLoop = 2;
+    } else if (loop === 2) {
+        otherLoop = 1;
+    }
+
+    let allInputsFilled = true;
+
+    // Check if inputs for both loops are filled
+    if (numLoops > 1) {
+        for (let l = 1; l <= numLoops; l++) {
+            for (let i = 1; i <= numPipes; i++) {
+                const diameter = document.getElementById(`diameter${l}_${i}`).value;
+                const length = document.getElementById(`length${l}_${i}`).value;
+                const flow = document.getElementById(`flow${l}_${i}`).value;
+
+                if (diameter === '' || length === '' || flow === '') {
+                    allInputsFilled = false;
+                    break;
+                }
+            }
+            if (!allInputsFilled) break;
+        }
+    } else {
+        for (let i = 1; i <= numPipes; i++) {
+            const diameter = document.getElementById(`diameter${loop}_${i}`).value;
+            const length = document.getElementById(`length${loop}_${i}`).value;
+            const flow = document.getElementById(`flow${loop}_${i}`).value;
+
+            if (diameter === '' || length === '' || flow === '') {
+                allInputsFilled = false;
+                break;
+            }
+        }
+    }
+
+    if (!allInputsFilled) {
+        alert(`Please fill in all inputs before calculating corrections for Loop ${loop}.`);
+        return;
+    }
+
     let sumHf = 0;
     let sumHfQ = 0;
-    let allHfFilled = true;
-    let allHfQFilled = true;
 
+    // Perform calculations if all inputs are filled
     for (let i = 1; i <= numPipes; i++) {
         const hf = parseFloat(document.getElementById(`hf${loop}_${i}`).innerText);
         const hfQ = parseFloat(document.getElementById(`hfQ${loop}_${i}`).innerText);
 
         if (!isNaN(hf)) {
             sumHf += hf;
-        } else {
-            allHfFilled = false;
         }
 
         if (!isNaN(hfQ)) {
             sumHfQ += hfQ;
-        } else {
-            allHfQFilled = false;
         }
     }
 
-    if (allHfFilled) {
-        document.getElementById(`sumHf${loop}`).innerText = `Σhf = ${sumHf.toFixed(2)}`;
+    const deltaQ = -sumHf / sumHfQ;
+
+    for (let i = 1; i <= numPipes; i++) {
+        const isShared = document.getElementById(`sharedPipe${loop}_${i}`) ? document.getElementById(`sharedPipe${loop}_${i}`).checked : false;
+        const deltaQOtherLoop = numLoops > 1 ? calculateDeltaQForOtherLoop(otherLoop) : 0;
+        const deltaQForSharedPipe = isShared ? deltaQ - deltaQOtherLoop : deltaQ;
+
+        document.getElementById(`deltaQ${loop}_${i}`).innerText = deltaQForSharedPipe.toFixed(4);
+        document.getElementById(`correctedFlow${loop}_${i}`).innerText = (parseFloat(document.getElementById(`flow${loop}_${i}`).value) + deltaQForSharedPipe).toFixed(4);
     }
 
-    if (allHfQFilled) {
-        document.getElementById(`sumHfQ${loop}`).innerText = `Σhf/Q = ${sumHfQ.toFixed(2)}`;
-    }
+    // Update sums
+    document.getElementById(`sumHf${loop}`).innerText = `Σhf = ${sumHf.toFixed(2)}`;
+    document.getElementById(`sumHfQ${loop}`).innerText = `Σhf/Q = ${sumHfQ.toFixed(2)}`;
 
-    if (allHfFilled && allHfQFilled) {
-        iterate(loop);
-    }
+    // Start iteration
+    iterate(loop);
 }
 
 function iterate(loop) {
@@ -167,9 +239,32 @@ function iterate(loop) {
                 isConverged = false; // Continue iterating if any pipe has not converged
             }
 
-            document.getElementById(`deltaQ${loop}_${pipe.index}`).innerText = deltaQ.toFixed(4);
-            document.getElementById(`correctedFlow${loop}_${pipe.index}`).innerText = pipe.flow.toFixed(4);
-            document.getElementById(`flow${loop}_${pipe.index}`).value = pipe.flow.toFixed(4);
+            // Special handling for checked pipes
+            if (numLoops > 1) {
+                const isChecked = document.getElementById(`sharedPipe${loop}_${pipe.index}`).checked;
+                if (isChecked) {
+                    // Calculate Q Correction based on the special rules
+                    let correctionFactor = 0;
+
+                    if (loop === 1) {
+                        const otherLoop = 2;
+                        correctionFactor = calculateCorrectionForCheckedPipe(loop, otherLoop);
+                    } else if (loop === 2) {
+                        const otherLoop = 1;
+                        correctionFactor = calculateCorrectionForCheckedPipe(loop, otherLoop);
+                    }
+
+                    document.getElementById(`deltaQ${loop}_${pipe.index}`).innerText = correctionFactor.toFixed(4);
+                    document.getElementById(`correctedFlow${loop}_${pipe.index}`).innerText = (pipe.flow + correctionFactor).toFixed(4);
+                    document.getElementById(`flow${loop}_${pipe.index}`).value = (pipe.flow + correctionFactor).toFixed(4);
+                } else {
+                    document.getElementById(`deltaQ${loop}_${pipe.index}`).innerText = deltaQ.toFixed(4);
+                    document.getElementById(`correctedFlow${loop}_${pipe.index}`).innerText = pipe.flow.toFixed(4);
+                }
+            } else {
+                document.getElementById(`deltaQ${loop}_${pipe.index}`).innerText = deltaQ.toFixed(4);
+                document.getElementById(`correctedFlow${loop}_${pipe.index}`).innerText = pipe.flow.toFixed(4);
+            }
         });
 
         // Update sumHf and sumHfQ values dynamically
@@ -177,9 +272,34 @@ function iterate(loop) {
         document.getElementById(`sumHfQ${loop}`).innerText = `Σhf/Q = ${sumHfQ.toFixed(2)}`;
     }
 
-    document.getElementById('convergenceMessage').innerText = `Loop ${loop} converged in ${iterationCount} iterations.`;
+    // Update convergence message
+    if (numLoops > 1) {
+        document.getElementById('convergenceMessage').innerText = `Simulation completed.`;
+    } else {
+        document.getElementById('convergenceMessage').innerText = `Loop ${loop} converged in ${iterationCount} iterations.`;
+    }
 }
 
+
+function calculateDeltaQForOtherLoop(loop) {
+    let sumHf = 0;
+    let sumHfQ = 0;
+
+    for (let i = 1; i <= numPipes; i++) {
+        const hf = parseFloat(document.getElementById(`hf${loop}_${i}`).innerText);
+        const hfQ = parseFloat(document.getElementById(`hfQ${loop}_${i}`).innerText);
+
+        if (!isNaN(hf)) {
+            sumHf += hf;
+        }
+
+        if (!isNaN(hfQ)) {
+            sumHfQ += hfQ;
+        }
+    }
+
+    return -sumHf / sumHfQ;
+}
 
 function calculateK(diameter, length) {
     const C = 100;
