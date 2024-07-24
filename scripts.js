@@ -129,27 +129,22 @@ function iterate(loop) {
         loopPipes.push({ diameter, length, flow, index: i });
     }
 
-    let sumHfQ = 0;
-    let sumHfQ2 = 0;
-    const deltaQ = new Array(numPipes).fill(0);
-
-    let isConverged = false;
-    let iterationCount = 0;
-    let previousFlows = new Array(numPipes).fill(0);
-
     const convergenceThreshold = 0.01; // 1% change threshold
+    let iterationCount = 0;
+    let isConverged = false;
 
-    do {
+    while (!isConverged) {
         iterationCount++;
-        sumHfQ = 0;
-        sumHfQ2 = 0;
+        let sumHf = 0;
+        let sumHfQ = 0;
 
+        // Calculate head loss and hf/Q for each pipe
         loopPipes.forEach(pipe => {
             const K = calculateK(pipe.diameter, pipe.length);
             const hf = calculateHeadLoss(K, pipe.flow);
             const hfQ = hf / pipe.flow;
+            sumHf += hf;
             sumHfQ += hfQ;
-            sumHfQ2 += hfQ * hfQ;
 
             document.getElementById(`K${loop}_${pipe.index}`).innerText = K.toFixed(4);
             document.getElementById(`Q${loop}_${pipe.index}`).innerText = pipe.flow.toFixed(4);
@@ -157,34 +152,34 @@ function iterate(loop) {
             document.getElementById(`hfQ${loop}_${pipe.index}`).innerText = hfQ.toFixed(2);
         });
 
-        const deltaQLoop = -sumHfQ / sumHfQ2;
+        // Calculate deltaQ
+        const deltaQ = -sumHf / sumHfQ;
 
-        loopPipes.forEach(pipe => {
-            const index = pipe.index;
-            const correctedFlow = pipe.flow + deltaQ[index - 1];
-            previousFlows[index - 1] = pipe.flow;
-            pipe.flow = correctedFlow;
-
-            deltaQ[index - 1] += deltaQLoop;
-
-            document.getElementById(`deltaQ${loop}_${index}`).innerText = deltaQ[index - 1].toFixed(4);
-            document.getElementById(`correctedFlow${loop}_${index}`).innerText = (pipe.flow + deltaQ[index - 1]).toFixed(4);
-            document.getElementById(`flow${loop}_${index}`).value = correctedFlow.toFixed(4);
-        });
-
+        // Update flows and check for convergence
         isConverged = true;
-        loopPipes.forEach((pipe, index) => {
-            const difference = Math.abs(pipe.flow - previousFlows[index]);
-            const threshold = convergenceThreshold * Math.abs(pipe.flow);
-            if (difference > threshold) {
-                isConverged = false;
+        loopPipes.forEach(pipe => {
+            const previousFlow = pipe.flow;
+            pipe.flow += deltaQ;
+            const difference = Math.abs(pipe.flow - previousFlow);
+            const threshold = convergenceThreshold * Math.abs(previousFlow);
+
+            if (difference >= threshold) {
+                isConverged = false; // Continue iterating if any pipe has not converged
             }
+
+            document.getElementById(`deltaQ${loop}_${pipe.index}`).innerText = deltaQ.toFixed(4);
+            document.getElementById(`correctedFlow${loop}_${pipe.index}`).innerText = pipe.flow.toFixed(4);
+            document.getElementById(`flow${loop}_${pipe.index}`).value = pipe.flow.toFixed(4);
         });
 
-    } while (!isConverged);
+        // Update sumHf and sumHfQ values dynamically
+        document.getElementById(`sumHf${loop}`).innerText = `Σhf = ${sumHf.toFixed(2)}`;
+        document.getElementById(`sumHfQ${loop}`).innerText = `Σhf/Q = ${sumHfQ.toFixed(2)}`;
+    }
 
-    document.getElementById('convergenceMessage').innerText = `Converged in ${iterationCount} iterations.`;
+    document.getElementById('convergenceMessage').innerText = `Loop ${loop} converged in ${iterationCount} iterations.`;
 }
+
 
 function calculateK(diameter, length) {
     const C = 100;
