@@ -14,7 +14,9 @@
   </head>
   <body>
     <nav>
-      <a href="help.html" class="help-button" target="_blank">Read Documentation</a>
+      <a href="help.html" class="help-button" target="_blank"
+        >Read Documentation</a
+      >
     </nav>
     <div class="container">
       <h1>Hardy Cross Simulator</h1>
@@ -28,6 +30,9 @@
       </div>
       <button onclick="generateTables()">Generate Tables</button>
       <div id="resultTables"></div>
+      <div class="canvas-container">
+        <canvas id="visualizationCanvas" width="600" height="600"></canvas>
+      </div>
       <div id="convergenceMessage"></div>
     </div>
     <footer class="footer">
@@ -72,6 +77,5 @@
       </div>
     </footer>
     <script src="scripts.js"></script>
-
   </body>
 </html>

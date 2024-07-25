@@ -52,6 +52,7 @@ function generateTables() {
         `;
         resultTables.appendChild(loopTable);
     }
+    drawVisualization();
 }
 
 function generateTableRows(numPipes, loop) {
@@ -111,6 +112,7 @@ function updateValues(loop, index) {
         document.getElementById(`hf${loop}_${index}`).innerText = hf.toFixed(2);
         document.getElementById(`hfQ${loop}_${index}`).innerText = hfQ.toFixed(2);
     }
+    drawVisualization();
 }
 
 function calculateCorrections(loop) {
@@ -190,7 +192,88 @@ function calculateCorrections(loop) {
 
     // Start iteration
     iterate(loop);
+    drawVisualization();
 }
+
+function drawVisualization() {
+    const canvas = document.getElementById('visualizationCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 200;
+
+    const angles = [];
+    for (let i = 0; i < numPipes; i++) {
+        angles.push((2 * Math.PI / numPipes) * i);
+    }
+
+    if (numPipes < 3 || numPipes > 6) {
+        alert("Visualization model can only handle 3 to 6 pipes in a single loop.");
+        return;
+    }
+
+    for (let i = 1; i <= numPipes; i++) {
+        const nextIndex = (i % numPipes) + 1;
+
+        const x1 = centerX + radius * Math.cos(angles[i - 1]);
+        const y1 = centerY + radius * Math.sin(angles[i - 1]);
+        const x2 = centerX + radius * Math.cos(angles[nextIndex - 1]);
+        const y2 = centerY + radius * Math.sin(angles[nextIndex - 1]);
+
+        const flowRate = parseFloat(document.getElementById(`correctedFlow1_${i}`).innerText);
+
+        if (!isNaN(flowRate)) {
+            const displayFlowRate = flowRate.toFixed(4);
+            if (flowRate >= 0) {
+                drawArrow(ctx, x1, y1, x2, y2, 'blue', displayFlowRate);
+            } else {
+                drawArrow(ctx, x2, y2, x1, y1, 'red', displayFlowRate);
+            }
+        }
+    }
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color, flowRate) {
+    const headlen = 10;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.lineTo(x2, y2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const offset = 15; // Offset distance from the line
+
+    // Adjust the rotation angle for better readability
+    let rotateAngle = angle;
+    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+        rotateAngle += Math.PI;
+    }
+
+    ctx.save();
+    ctx.translate(midX, midY);
+    ctx.rotate(rotateAngle);
+    ctx.font = '14px Arial'; // Increase font size
+    ctx.fillStyle = 'black';
+    ctx.fillText(flowRate, 0, -offset);
+    ctx.restore();
+}
+
+// Add event listeners to call generateTables on page load
+document.addEventListener('DOMContentLoaded', generateTables);
 
 function iterate(loop) {
     const loopPipes = [];
